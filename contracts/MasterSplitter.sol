@@ -3,16 +3,19 @@ pragma solidity >=0.6.0 < 0.7.5;
 contract MasterSplitter {
     
     address payable public owner;
-    bool public isPaused = false;
+    bool public isPaused;
+    event MoneyIn(address sender, address payeeOne, address payeeTwo, uint amount);
+    event MoneyOut(address payee, uint amount);
     
     //I'm using owner address to create a kill switch at the bottom
     constructor () {
         owner = msg.sender;
+        isPaused = false;
     }
     
     //Does this work better, I'm using your example from a question you answered on stack exchange
     modifier onlyIfRunning {
-        require(isPaused == false);
+        require(!isPaused);
         _;
     }
     
@@ -36,16 +39,25 @@ contract MasterSplitter {
     
     uint amountSplit;
     uint splitRemainder;
+    mapping (address => uint) etherOwed;
     
     // The if statement will return the remainder to the sender, if there's any
     function split(address payable payeeOne, address payable payeeTwo) external someoneElse(payeeOne, payeeTwo) onlyIfRunning validAddresses(payeeOne, payeeTwo) payable {
-        amountSplit = msg.value / 2;
-        splitRemainder = msg.value % 2;
-        payeeOne.transfer(amountSplit);
-        payeeTwo.transfer(amountSplit);
+        etherOwed[payeeOne] = msg.value / 2;
+        etherOwed[payeeTwo] = msg.value / 2;
+
         if (splitRemainder != 0) {
-            msg.sender.transfer(splitRemainder);
+            msg.sender.transfer(msg.value % 2);
         }
+        
+        emit MoneyIn(msg.sender, payeeOne, payeeTwo, msg.value);
+    }
+    
+    // By having a separated withdraw function, there's no need for onlyOwner modifier (since only those with the etherOwed mapping will get payed)
+    function withdraw() public onlyIfRunning {
+        msg.sender.transfer(etherOwed[msg.sender]);
+        etherOwed[msg.sender] = 0;
+        emit MoneyOut(msg.sender, etherOwed[msg.sender]);
     }
     
     //Removed selfdestruct function and will now use a boolean instead
