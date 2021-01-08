@@ -1,4 +1,4 @@
-pragma solidity >=0.6.0 < 0.7.5;
+pragma solidity 0.7.4;
 
 import "./Pausable.sol";
 
@@ -39,19 +39,19 @@ contract MasterSplitter is Pausable {
         etherOwed[payeeOne] = half;
         etherOwed[payeeTwo] = half;
 
+        emit MoneyIn(msg.sender, payeeOne, payeeTwo, msg.value);
+
         uint remainder = msg.value % 2;
         if (remainder != 0) {
             msg.sender.transfer(remainder);
         }
-        
-        emit MoneyIn(msg.sender, payeeOne, payeeTwo, msg.value);
     }
     
     // By having a separated withdraw function, there's no need for onlyOwner modifier (since only those with the etherOwed mapping will get payed)
     function withdraw() public onlyIfRunning {
-        etherOwed[msg.sender] = 0;
-        msg.sender.transfer(etherOwed[msg.sender]);
         emit MoneyOut(msg.sender, etherOwed[msg.sender]);
+        etherOwed[msg.sender] = 0;
+        msg.sender.transfer(etherOwed[msg.sender]);   
     }
     
     

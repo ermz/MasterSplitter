@@ -1,6 +1,6 @@
-pragma solidity >=0.6.0 < 0.7.5;
+pragma solidity 0.7.4;
 
-import "../node_modules/contracts/access/Ownable.sol";
+import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 
 contract Pausable is Ownable {
 	
@@ -16,10 +16,14 @@ contract Pausable is Ownable {
         _;
     }
 
-    //Removed selfdestruct function and will now use a boolean instead
-    //I kept the onlyOwner modifier to avoid other stopping the split function
-    function stopContract() public onlyOwner {
-        isPaused = true;
+    // Having one function that toggles isPaused "on" and "off" is better than having two separate functions
+    function contractSwitch() public onlyOwner {
+        if(isPaused) {
+        	isPaused = false;
+        } else {
+        	isPaused = true;
+        }
     }
+
 
 }
