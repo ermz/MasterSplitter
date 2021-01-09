@@ -5,6 +5,8 @@ import "../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 contract Pausable is Ownable {
 	bool public isPaused;
 
+	event ToggleSwitch(bool isPaused);
+
 	constructor () {
 		isPaused;
 	}
@@ -14,11 +16,12 @@ contract Pausable is Ownable {
 		_;
 	}
 
-	function contractSwitch() public onlyOwner {
-		if (isPaused) {
-			isPaused = false;
-		} else {
-			isPaused = true;
-		}
+	modifier onlyIfPaused public {
+		require(isPaused, "Contract Running");
+	}
+
+	function runSwitch(bool onOff) public onlyOwner {
+		isPaused = onOff;
+		emit ToggleSwitch(onOff);
 	}
 }
